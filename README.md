@@ -1,4 +1,6 @@
 rpi_pic-motor
 =============
 
-RaspberryPi + PIC stepper motor controller
+Stepper motor control using the RPi board (type B, rev 2) + PIC driver board. 
+Developed by Jesus Vasquez
+Version 1
