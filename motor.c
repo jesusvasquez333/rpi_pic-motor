@@ -10,7 +10,7 @@ int help(char *command)
 {
 	printf("Steper motor driver based on Raspberry Pi + PIC (Version 1)\n");
 	printf("Developed by Jesus Vasquez.\n");
-	printf("Usage: %s <SPEED> <ACCE> <ACCE_F>\n Where:\n  <SPEED> 0 = 1875 rpm; 1 = 937,5 rpm; ... ; 7 = 14,6 rpm; ... ; 15 = 0,06 rpm.\n  <ACCE> 0 = without acceleration curve; 1 = with acceleration curve. and\n  <ACCE_F> = acceleration factor (1..5)\n", command);
+	printf("Usage: %s <SPEED> <ACCE> <ACCE_F>\n Where:\n  <SPEED> 0 = 250 rpm; 1 = 125 rpm; ... ; 7 = 1,95 rpm.\n  <ACCE> 0 = without acceleration curve; 1 = with acceleration curve. and\n  <ACCE_F> = acceleration factor (1..5)\n", command);
 	return 1;
 }
 
@@ -27,13 +27,13 @@ int main(int argc, char **argv)
 	uint16_t speedchange_count = 0;
 	uint8_t use_acceleration, acceleration_factor;
 
-	char *speed_str[] = {"1875 rpm", "937,5 rpm", "468,75 rpm", "234,36 rpm", "117,19 rpm", "58,59 rpm", "29,30 rpm", "14,65 rpm", "7,32 rpm", "3,66 rpm", "1,83 rpm", "0,92 rpm", "0,46 rpm", "0,23 rpm", "0,11 rpm", "0,06 rpm"};
+	char *speed_str[] = {"250 rpm", "125 rpm", "62,5 rpm", "31,25 rpm", "15,64 rpm", "7,81 rpm", "3,91 rpm", "1,95 rpm"};
 
 	if (argc != 4)
 		return help(argv[0]);
 
 	speed = atoi(argv[1]); 
-	if (speed > 15)
+	if (speed > 7)
 		return help(argv[0]);
 
 	use_acceleration = atoi(argv[2]);
@@ -52,11 +52,7 @@ int main(int argc, char **argv)
 
 	if (use_acceleration)
 	{
-		if (speed < 8)
-			delay_var = 256;
-		else
-			delay_var = (1 << speed);
-
+		delay_var = 128;
 		delay_var_final = (1 << speed);
 	}
 	else
@@ -83,13 +79,13 @@ int main(int argc, char **argv)
     while (1)
     {
 
-	direction = (microstep_count < microstep_togo);
-	bcm2835_gpio_write(MOTOR_DIR, direction);
-	bcm2835_delayMicroseconds(500);
 
 		if (microstep_count != microstep_togo)
 		{
 			bcm2835_gpio_write(MOTOR_CS, LOW);
+
+			direction = (microstep_count < microstep_togo);
+			bcm2835_gpio_write(MOTOR_DIR, direction);
 
 			bcm2835_gpio_write(MOTOR_STEP, HIGH);
 			bcm2835_delayMicroseconds(microstep_time);
@@ -105,11 +101,12 @@ int main(int argc, char **argv)
 			{
 				if (delay_var > delay_var_final)
 				{
-					if (++speedchange_count >= acceleration_factor)
+					speedchange_count += 10;
+					if (speedchange_count >= acceleration_factor)
 					{
 						speedchange_count = 0;
 						delay_var--;
-						microstep_time = 10 * delay_var;
+						microstep_time = 150 * delay_var;
 					}
 				}
 			}
